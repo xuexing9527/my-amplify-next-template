@@ -10,16 +10,35 @@ const schema = a.schema({
   Todo: a
     .model({
       content: a.string(),
+      group: a.string(),
     })
-    .authorization((allow) => [allow.publicApiKey()]),
-});
+    // .authorization((allow) => [allow.publicApiKey()]),
+    .authorization((allow) => [
+      allow.owner(), // 允许登录用户执行CRUD操作
+      allow.groups(["groupName"]), // 基于组的权限设置
+    ]
+    ),
+  addUserToGroup: a
+    .mutation()
+    .arguments({
+      userId: a.string().required(),
+      groupName: a.string().required(),
+    })
+    .authorization((allow) => [allow.group("ADMINS")])
+    .handler(
+      a.handler.function(async ({ userId, groupName }: { userId: string; groupName: string; }) => {
+        return await addUserToGroup(userId, groupName);
+      })
+    )
+    .returns(a.json())
+})
 
 export type Schema = ClientSchema<typeof schema>;
 
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: "apiKey",
+    defaultAuthorizationMode: "userPool",
     apiKeyAuthorizationMode: {
       expiresInDays: 30,
     },
