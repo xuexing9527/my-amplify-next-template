@@ -1,4 +1,6 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { addUserToGroup } from "../data/add-user-to-group/resource"
+
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -10,13 +12,17 @@ const schema = a.schema({
   Todo: a
     .model({
       content: a.string(),
-      group: a.string(),
+      group: a.string().array(),
     })
     // .authorization((allow) => [allow.publicApiKey()]),
-    .authorization((allow) => [
-      allow.owner(), // 允许登录用户执行CRUD操作
-      allow.groups(["groupName"]), // 基于组的权限设置
-    ]
+    .authorization((allow) => {
+      // console.log('allow: ', allow)
+      return [
+        allow.groupsDefinedIn('groups'),
+        // allow.groups(['ADMINS']), // 基于组的权限设置
+        // allow.owner(), // 允许登录用户执行CRUD操作
+      ]
+    }
     ),
   addUserToGroup: a
     .mutation()
@@ -24,11 +30,11 @@ const schema = a.schema({
       userId: a.string().required(),
       groupName: a.string().required(),
     })
-    .authorization((allow) => [allow.group("ADMINS")])
+    .authorization((allow) => [
+      allow.authenticated(),
+     ])
     .handler(
-      a.handler.function(async ({ userId, groupName }: { userId: string; groupName: string; }) => {
-        return await addUserToGroup(userId, groupName);
-      })
+      a.handler.function(addUserToGroup)
     )
     .returns(a.json())
 })

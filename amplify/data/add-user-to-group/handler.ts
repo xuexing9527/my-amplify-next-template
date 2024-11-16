@@ -6,10 +6,12 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider"
 
 type Handler = Schema["addUserToGroup"]["functionHandler"]
-const client = new CognitoIdentityProviderClient()
+const client = new CognitoIdentityProviderClient({ region: env.AWS_DEFAULT_REGION })
 
 export const handler: Handler = async (event) => {
   const { userId, groupName } = event.arguments
+  console.log('userId: ', userId)
+  console.log('groupName: ', groupName)
   const command = new AdminAddUserToGroupCommand({
     Username: userId,
     GroupName: groupName,
